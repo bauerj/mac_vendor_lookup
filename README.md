@@ -5,6 +5,10 @@ This library provides an easy way to get vendor information from a MAC address. 
 OUI prefix list. It has an asynchronous interface using Python 3's asyncio as well as a regular synchronous interface
 for old-school usage.
 
+## Installation
+
+    pip install mac-vendor-lookup
+
 ## Basic Usage
 
 ```python
