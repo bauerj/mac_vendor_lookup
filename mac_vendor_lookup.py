@@ -83,6 +83,9 @@ class MacLookup(BaseMacLookup):
     def lookup(self, mac):
         return self.loop.run_until_complete(self.async_lookup.lookup(mac))
 
+    def load_vendors(self):
+        return self.loop.run_until_complete(self.async_lookup.load_vendors())
+
 
 def main():
     import sys
