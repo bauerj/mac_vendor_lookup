@@ -1,6 +1,8 @@
 import asyncio
 import os
 import logging
+import sys
+from datetime import datetime
 
 import aiofiles
 import aiohttp
@@ -26,16 +28,34 @@ class BaseMacLookup(object):
             raise InvalidMacError("{} is not a valid MAC address (too long)".format(_mac))
         return mac
 
+    def get_last_updated(self):
+        vendors_location = self.find_vendors_list()
+        if vendors_location:
+            return datetime.fromtimestamp(os.path.getmtime(vendors_location))
+
+    def find_vendors_list(self):
+        possible_locations = [
+            BaseMacLookup.cache_path,
+            sys.prefix + "/cache/mac-vendors.txt",
+            os.path.dirname(__file__) + "/../../cache/mac-vendors.txt",
+            os.path.dirname(__file__) + "/../../../cache/mac-vendors.txt",
+        ]
+
+        for location in possible_locations:
+            if os.path.exists(location):
+                return location
+
 
 class AsyncMacLookup(BaseMacLookup):
     def __init__(self):
         self.prefixes = None
 
     async def update_vendors(self, url=OUI_URL):
-        logging.log(logging.INFO, "Downloading MAC vendor list")
+        logging.log(logging.DEBUG, "Downloading MAC vendor list")
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 async with aiofiles.open(AsyncMacLookup.cache_path, mode='wb') as f:
+                    self.prefixes = {}
                     while True:
                         line = await response.content.readline()
                         if not line:
@@ -47,21 +67,23 @@ class AsyncMacLookup(BaseMacLookup):
 
     async def load_vendors(self):
         self.prefixes = {}
-        if not os.path.exists(AsyncMacLookup.cache_path):
-            try:
-                os.makedirs("/".join(AsyncMacLookup.cache_path.split("/")[:-1]))
-            except OSError:
-                pass
-            await self.update_vendors()
-        else:
-            logging.log(logging.INFO, "Loading vendor list from cache")
-            async with aiofiles.open(AsyncMacLookup.cache_path, mode='rb') as f:
+
+        vendors_location = self.find_vendors_list()
+        if vendors_location:
+            logging.log(logging.DEBUG, "Loading vendor list from {}".format(vendors_location))
+            async with aiofiles.open(vendors_location, mode='rb') as f:
                 # Loading the entire file into memory, then splitting is
                 # actually faster than streaming each line. (> 1000x)
                 for l in (await f.read()).splitlines():
                     prefix, vendor = l.split(b":", 1)
                     self.prefixes[prefix] = vendor
-        logging.log(logging.INFO, "Vendor list successfully loaded: {} entries".format(len(self.prefixes)))
+        else:
+            try:
+                os.makedirs("/".join(AsyncMacLookup.cache_path.split("/")[:-1]))
+            except OSError:
+                pass
+            await self.update_vendors()
+        logging.log(logging.DEBUG, "Vendor list successfully loaded: {} entries".format(len(self.prefixes)))
 
     async def lookup(self, mac):
         mac = self.sanitise(mac)
@@ -75,7 +97,11 @@ class AsyncMacLookup(BaseMacLookup):
 class MacLookup(BaseMacLookup):
     def __init__(self):
         self.async_lookup = AsyncMacLookup()
-        self.loop = asyncio.get_event_loop()
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
     def update_vendors(self, url=OUI_URL):
         return self.loop.run_until_complete(self.async_lookup.update_vendors(url))

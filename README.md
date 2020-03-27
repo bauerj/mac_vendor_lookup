@@ -1,7 +1,7 @@
 Mac Vendor Lookup
 =================
 
-This library provides an easy way to get vendor information from a MAC address. It downloads a local copy of the IEEE's
+This library provides an easy way to get vendor information from a MAC address. It contains a local copy of the IEEE's
 OUI prefix list. It has an asynchronous interface using Python 3's asyncio as well as a regular synchronous interface
 for old-school usage.
 
@@ -21,20 +21,19 @@ Output:
 
 > VEB KOMBINAT ROBOTRON
 
-## Pre-load the vendor list
+## Update the vendor list
 
-The list of MAC vendors is currently about 4MB large. By default a lazy-loading mechanism is used,
-that loads the list when it's needed. If it is clear that the list is needed and a wait time during the 
-query is not desired, the list can also be loaded when the program is started:
+The library contains a list of MAC prefixes obtained at build-time. If you need up-to-date information, you can
+download a fresh copy of the list directly from IEEE with `MacLookup.update_vendors` or `AsyncMacLookup.update_vendors`:
 
 ```python
 from mac_vendor_lookup import MacLookup
 
 mac = MacLookup()
-mac.load_vendors()  # <- This can take a few seconds for the first download
+mac.update_vendors()  # <- This can take a few seconds for the download
     
 def find_mac(mac_address):
-    print(mac.lookup(mac_address))  # <- this will only take a few µs!
+    print(mac.lookup(mac_address))
 
 ```
 
