@@ -19,7 +19,7 @@ class BaseMacLookup(object):
 
     @staticmethod
     def sanitise(_mac):
-        mac = _mac.replace(":", "").replace("-", "").upper()
+        mac = _mac.replace(":", "").replace("-", "").replace(".","").upper()
         try:
             int(mac, 16)
         except ValueError:
