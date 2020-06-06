@@ -37,6 +37,24 @@ def find_mac(mac_address):
 
 ```
 
+## Vendor list custom location or path
+
+The library stores and looks for the list of MAC prefixes in a group predefined defaults paths. If a custom 
+directory is required, then override the class variable `cache_path` of `class BaseMacLookup(...)` from it default 
+location of: `os.path.expanduser('~/.cache/mac-vendors.txt')` to your prefered location.
+
+```python
+from mac_vendor_lookup import MacLookup, BaseMacLookup
+
+BaseMacLookup.cache_path = #/relative/or/absolute/path/to/the/prefered/storage/location
+mac = MacLookup()
+mac.update_vendors()  # <- This can take a few seconds for the download and it will be stored in the new path overriden above
+    
+def find_mac(mac_address):
+    print(mac.lookup(mac_address))
+
+```
+
 ## Async Interface
 
 There is also an asynchronous interface available:
