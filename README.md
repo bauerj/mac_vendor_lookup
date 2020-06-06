@@ -48,7 +48,7 @@ from mac_vendor_lookup import MacLookup, BaseMacLookup
 
 BaseMacLookup.cache_path = #/relative/or/absolute/path/to/the/prefered/storage/location
 mac = MacLookup()
-mac.update_vendors()  # <- This can take a few seconds for the download and it will be stored in the new path overriden above
+mac.update_vendors()  # <- This can take a few seconds for the download and it will be stored in the new path
     
 def find_mac(mac_address):
     print(mac.lookup(mac_address))
