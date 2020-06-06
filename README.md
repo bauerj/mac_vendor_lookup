@@ -46,7 +46,7 @@ location of: `os.path.expanduser('~/.cache/mac-vendors.txt')` to your prefered l
 ```python
 from mac_vendor_lookup import MacLookup, BaseMacLookup
 
-BaseMacLookup.cache_path = #/relative/or/absolute/path/to/the/prefered/storage/location
+BaseMacLookup.cache_path = "/relative/or/absolute/path/to/the/prefered/storage/location"
 mac = MacLookup()
 mac.update_vendors()  # <- This can take a few seconds for the download and it will be stored in the new path
     
