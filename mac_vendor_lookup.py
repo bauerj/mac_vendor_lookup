@@ -14,12 +14,21 @@ class InvalidMacError(Exception):
     pass
 
 
+class VendorNotFoundError(KeyError):
+    def __init__(self, mac):
+        self.mac = mac
+
+    def __str__(self):
+        return f"The vendor for MAC {self.mac} could not be found. " \
+               f"Either it's not registered or the local list is out of date. Try MacLookup().update_vendors()"
+
+
 class BaseMacLookup(object):
     cache_path = os.path.expanduser('~/.cache/mac-vendors.txt')
 
     @staticmethod
     def sanitise(_mac):
-        mac = _mac.replace(":", "").replace("-", "").replace(".","").upper()
+        mac = _mac.replace(":", "").replace("-", "").replace(".", "").upper()
         try:
             int(mac, 16)
         except ValueError:
@@ -91,7 +100,10 @@ class AsyncMacLookup(BaseMacLookup):
             await self.load_vendors()
         if type(mac) == str:
             mac = mac.encode("utf8")
-        return self.prefixes[mac[:6]].decode("utf8")
+        try:
+            return self.prefixes[mac[:6]].decode("utf8")
+        except KeyError:
+            raise VendorNotFoundError(mac)
 
 
 class MacLookup(BaseMacLookup):
