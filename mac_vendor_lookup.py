@@ -7,7 +7,7 @@ from datetime import datetime
 import aiofiles
 import aiohttp
 
-OUI_URL = "http://standards-oui.ieee.org/oui.txt"
+OUI_URL = "https://standards-oui.ieee.org/oui.txt"
 
 
 class InvalidMacError(Exception):
@@ -142,3 +142,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
