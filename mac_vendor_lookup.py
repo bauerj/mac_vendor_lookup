@@ -7,7 +7,10 @@ from datetime import datetime
 import aiofiles
 import aiohttp
 
-OUI_URL = "https://standards-oui.ieee.org/oui.txt"
+OUI_URL = "https://standards-oui.ieee.org/oui/oui.txt"
+REQUEST_HEADERS =  headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
 
 
 class InvalidMacError(Exception):
@@ -51,7 +54,7 @@ class BaseMacLookup(object):
         ]
 
         for location in possible_locations:
-            if os.path.exists(location):
+            if os.path.exists(location) and os.path.getsize(location):
                 return location
 
 
@@ -61,8 +64,9 @@ class AsyncMacLookup(BaseMacLookup):
 
     async def update_vendors(self, url=OUI_URL):
         logging.log(logging.DEBUG, "Downloading MAC vendor list")
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=REQUEST_HEADERS) as session:
             async with session.get(url) as response:
+                has_ouis = False
                 async with aiofiles.open(AsyncMacLookup.cache_path, mode='wb') as f:
                     self.prefixes = {}
                     while True:
@@ -73,6 +77,10 @@ class AsyncMacLookup(BaseMacLookup):
                             prefix, vendor = (i.strip() for i in line.split(b"(base 16)", 1))
                             self.prefixes[prefix] = vendor
                             await f.write(prefix + b":" + vendor + b"\n")
+                            has_ouis = True
+                if not has_ouis:
+                    logging.error(f"Updating vendors list failed. The response contained no valid data. {line}")
+                    os.unlink(AsyncMacLookup.cache_path)
 
     async def load_vendors(self):
         self.prefixes = {}
