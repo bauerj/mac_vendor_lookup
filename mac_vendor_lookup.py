@@ -92,8 +92,9 @@ class AsyncMacLookup(BaseMacLookup):
                 # Loading the entire file into memory, then splitting is
                 # actually faster than streaming each line. (> 1000x)
                 for l in (await f.read()).splitlines():
-                    prefix, vendor = l.split(b":", 1)
-                    self.prefixes[prefix] = vendor
+                    if b"(base 16)" in l:
+                        prefix, vendor = (i.strip() for i in l.split(b"(base 16)", 1))
+                        self.prefixes[prefix] = vendor
         else:
             try:
                 os.makedirs("/".join(AsyncMacLookup.cache_path.split("/")[:-1]))
